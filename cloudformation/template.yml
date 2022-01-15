@@ -135,3 +135,24 @@ Resources:
           Value: !Sub '${Name}-db-secgroup'
       VpcId: !Ref VPC
 
+Outputs:
+  VpcId:
+    Value: !Ref VPC
+    Export:
+      Name: VpcId
+  PublicSubnet:
+    Value: !Ref PublicSubnet
+    Export:
+      Name: PublicSubnet
+  PrivateSubnet:
+    Value: !Ref PrivateSubnet
+    Export:
+      Name: PrivateSubnet
+  WebSecurityGroup:
+    Value: !Ref WebSecurityGroup
+    Export:
+      Name: WebSecurirtyGroup
+  DBSecurityGroup:
+    Value: !Ref DBSecurityGroup
+    Export:
+      Name: DBSecurityGroup
