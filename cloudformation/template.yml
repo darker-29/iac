@@ -6,6 +6,9 @@ Parameters:
     Type: String
     Default: nobody
     Description: 'Enter Your Name. (Exam: d-ito)'
+  KeyName:
+    Description: The EC2 Key Pair to allow SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
 
 Resources:
   VPC:
@@ -108,13 +111,29 @@ Resources:
       SecurityGroupEgress:
         - CidrIp: 0.0.0.0/0
           FromPort: 3306
-          IpProtocol: tcp
           ToPort: 3306
+          IpProtocol: tcp
+        - CidrIp: 0.0.0.0/0
+          FromPort: 80
+          ToPort: 80
+          IpProtocol: tcp
+        - CidrIp: 0.0.0.0/0
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
       SecurityGroupIngress:
         - CidrIp: 0.0.0.0/0
           FromPort: 80
-          IpProtocol: tcp
           ToPort: 80
+          IpProtocol: tcp
+        - CidrIp: 0.0.0.0/0
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22
+          ToPort: 22
+          IpProtocol: tcp
       Tags:
         - Key: Name
           Value: !Sub '${Name}-web-secgroup'
@@ -135,24 +154,77 @@ Resources:
           Value: !Sub '${Name}-db-secgroup'
       VpcId: !Ref VPC
 
-Outputs:
-  VpcId:
-    Value: !Ref VPC
-    Export:
-      Name: VpcId
-  PublicSubnet:
-    Value: !Ref PublicSubnet
-    Export:
-      Name: PublicSubnet
-  PrivateSubnet:
-    Value: !Ref PrivateSubnet
-    Export:
-      Name: PrivateSubnet
-  WebSecurityGroup:
-    Value: !Ref WebSecurityGroup
-    Export:
-      Name: WebSecurirtyGroup
-  DBSecurityGroup:
-    Value: !Ref DBSecurityGroup
-    Export:
-      Name: DBSecurityGroup
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-032d6db78f84e8bf5
+      KeyName: !Ref KeyName
+      InstanceType: t2.micro
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          SubnetId: !Ref PublicSubnet
+          GroupSet:
+            - !Ref WebSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            Encrypted: false
+            VolumeSize: 8
+            VolumeType: gp2
+      UserData: !Base64 |
+        #!/bin/bash
+        sudo yum install -y git
+      Tags:
+        - Key: Name
+          Value: ec2-tmp
+
+  SecureLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /var/log/secure
+      RetentionInDays: 90
+
+  SSHAcceptedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref AcceptedSSHLoginTopic
+      AlarmDescription: Alert Accepted SSH Login
+      AlarmName: Alert-Accepted-SSH-Login
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 1
+      MetricName: Accepted-SSH-Login
+      Namespace: AWS/EC2
+      Period: 60
+      Statistic: Average
+      Threshold: 1
+
+  AcceptedSSHLoginMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: Accepted
+      LogGroupName: !Ref SecureLogGroup
+      MetricTransformations:
+        - DefaultValue: 0
+          MetricName: Accepted-SSH-Login
+          MetricNamespace: EC2Bastion
+          MetricValue: 1
+
+  AcceptedSSHLoginTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: false
+      FifoTopic: false
+      KmsMasterKeyId: false
+      Subscription:
+        - Endpoint: ito@gizumo-inc.jp
+          Protocol: email
+      Tags:
+        - Key: Name
+          Value: AcceptedSSHLoginAlert
+      TopicName: Accepted-SSH-Login
+
