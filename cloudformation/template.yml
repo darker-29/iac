@@ -175,7 +175,7 @@ Resources:
             VolumeType: gp2
       UserData: !Base64 |
         #!/bin/bash
-        sudo yum install -y git
+        sudo yum install -y git amazon-cloudwatch-agent
       Tags:
         - Key: Name
           Value: ec2-tmp
@@ -185,7 +185,7 @@ Resources:
     Properties:
       LogGroupName: /var/log/secure
       RetentionInDays: 90
-
+ 
   SSHAcceptedAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -198,7 +198,7 @@ Resources:
       DatapointsToAlarm: 1
       EvaluationPeriods: 1
       MetricName: Accepted-SSH-Login
-      Namespace: AWS/EC2
+      Namespace: EC2Bastion
       Period: 60
       Statistic: Average
       Threshold: 1
