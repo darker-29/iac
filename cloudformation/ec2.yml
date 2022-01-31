@@ -16,6 +16,9 @@ Parameters:
   AMIID:
     Type: String
     Default: ami-032d6db78f84e8bf5
+  LatestVersion:
+    Type: String
+    Default: 1
 
 Resources:
   EC2InstanceRole:
@@ -71,29 +74,12 @@ Resources:
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: !Ref AMIID
-      KeyName: !Ref KeyName
-      InstanceType: !Ref InstanceType
-      EC2InstanceProfile: !Ref EC2InstanceProfile
-      NetworkInterfaces:
-        - AssociatePublicIpAddress: true
-          DeviceIndex: 0
-          SubnetId: !ImportValue PublicSubnet
-          GroupSet:
-            - !ImportValue WebSecurityGroup
-      BlockDeviceMappings:
-        - DeviceName: /dev/xvda
-          Ebs:
-            DeleteOnTermination: true
-            Encrypted: false
-            VolumeSize: 8
-            VolumeType: gp2
-      UserData: !Base64 |
-        #!/bin/bash
-        sudo yum install -y git nginx amazon-cloudwatch-agent
+      LaunchTemplate:
+        LaunchTemplateId: !Ref EC2LaunchTemplate
+        Version: !GetAtt EC2LaunchTemplate.LatestNumber
       Tags:
         - Key: Name
-          Value: ec2-tmp
+          Value: !Sub ${Env}-ec2
 
   EC2LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
@@ -113,9 +99,9 @@ Resources:
         Monitoring:
           Enabled: true
         NetworkInterfaces:
-          - InterfaceType: interface
-            AssociatePublicIpAddress: true
+          - AssociatePublicIpAddress: true
             DeleteOnTermination: true
+            DeviceIndex: 0
             SubnetId: !ImportValue PublicSubnet
             Groups:
               - !ImportValue WebSecurityGroup
@@ -127,7 +113,7 @@ Resources:
               VolumeSize: 8
               VolumeType: gp2
         UserData:
-          sudo yum -y install git nginx amazon-cloudwatch-agent
+          sudo yum -y install git nginx php amazon-cloudwatch-agent
         InstanceInitiatedShutdownBehavior: stop
       TagSpecifications:
         - ResourceType: instance
