@@ -7,8 +7,15 @@ Parameters:
     Default: nobody
     Description: 'Enter Your Name. (Exam: d-ito)'
   KeyName:
-    Description: The EC2 Key Pair to allow SSH access to the instance
     Type: AWS::EC2::KeyPair::KeyName
+    Description: The EC2 Key Pair to allow SSH access to the instance
+  InstanceType:
+    Type: String
+    AllowedValues: [t2.micro, t3.micro]
+    Description: Enter t2.micro or t3.micro
+  AMIID:
+    Type: String
+    Default: ami-032d6db78f84e8bf5
 
 Resources:
   EC2InstanceRole:
@@ -64,9 +71,9 @@ Resources:
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-032d6db78f84e8bf5
+      ImageId: !Ref AMIID
       KeyName: !Ref KeyName
-      InstanceType: t2.micro
+      InstanceType: !Ref InstanceType
       EC2InstanceProfile: !Ref EC2InstanceProfile
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
@@ -83,7 +90,7 @@ Resources:
             VolumeType: gp2
       UserData: !Base64 |
         #!/bin/bash
-        sudo yum install -y git amazon-cloudwatch-agent
+        sudo yum install -y git nginx amazon-cloudwatch-agent
       Tags:
         - Key: Name
           Value: ec2-tmp
@@ -91,40 +98,27 @@ Resources:
   EC2LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
+      LaunchTemplateName: WebTemplate
       LaunchTemplateData:
-        ImageId:
+        ImageId: ami-03d79d440297083e3
         InstanceType: t2.micro
         KeyName: !Ref KeyName
-        SecurityGroupIds: # Optional
-          - CHANGEME
+        SecurityGroupIds:
         CpuOptions:
-          CoreCount: 0 # Optional
-          ThreadsPerCore: 0 # Optional
+          CoreCount: 1
+          ThreadsPerCore: 2
         IamInstanceProfile:
           Arn: !GetAtt EC2InstanceProfile.Arn
           Name: EC2InstanceProfile
         Monitoring:
           Enabled: true
-        NetworkInterfaces: # Optional
-          - AssociateCarrierIpAddress: false # Optional
-            AssociatePublicIpAddress: false # Optional
-            DeleteOnTermination: false # Optional
-            Description: CHANGEME # Optional
-            DeviceIndex: 0 # Optional
-            Groups: # Optional
-              - CHANGEME
-            InterfaceType: CHANGEME # Optional
-            Ipv6AddressCount: 0 # Optional
-            Ipv6Addresses: # Optional
-              - Ipv6Address: CHANGEME # Optional
-            NetworkCardIndex: 0 # Optional
-            NetworkInterfaceId: CHANGEME # Optional
-            PrivateIpAddress: CHANGEME # Optional
-            PrivateIpAddresses: # Optional
-              - Primary: false # Optional
-                PrivateIpAddress: CHANGEME # Optional
-            SecondaryPrivateIpAddressCount: 0 # Optional
-            SubnetId: CHANGEME # Optional
+        NetworkInterfaces:
+          - InterfaceType: interface
+            AssociatePublicIpAddress: true
+            DeleteOnTermination: true
+            SubnetId: !ImportValue PublicSubnet
+            Groups:
+              - !ImportValue WebSecurityGroup
         BlockDeviceMappings:
           - DeviceName: /dev/xvda
             Ebs:
@@ -134,26 +128,7 @@ Resources:
               VolumeType: gp2
         UserData:
           sudo yum -y install git nginx amazon-cloudwatch-agent
-        CapacityReservationSpecification: # Optional
-          CapacityReservationPreference: CHANGEME # Optional
-          CapacityReservationTarget: # Optional
-            CapacityReservationId: CHANGEME # Optional
-            CapacityReservationResourceGroupArn: CHANGEME # Optional
-        DisableApiTermination: false
         InstanceInitiatedShutdownBehavior: stop
-        InstanceMarketOptions: # Optional
-          MarketType: CHANGEME # Optional
-          SpotOptions: # Optional
-            BlockDurationMinutes: 0 # Optional
-            InstanceInterruptionBehavior: CHANGEME # Optional
-            MaxPrice: CHANGEME # Optional
-            SpotInstanceType: CHANGEME # Optional
-            ValidUntil: CHANGEME # Optional
-        MetadataOptions: # Optional
-          HttpEndpoint: CHANGEME # Optional
-          HttpPutResponseHopLimit: 0 # Optional
-          HttpTokens: CHANGEME # Optional
-      LaunchTemplateName: WebTemplate
       TagSpecifications:
         - ResourceType: instance
           Tags:
