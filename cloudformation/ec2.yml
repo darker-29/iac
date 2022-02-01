@@ -36,10 +36,10 @@ Resources:
               - "sts:AssumeRole"
       Path: "/"
 
-  EnableAccessS3Policy:
+  EC2EnableAccessS3Policy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: EC2AccessPolicies
+      PolicyName: EC2FullAccessS3Policy
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -50,10 +50,10 @@ Resources:
       Roles:
       - !Ref EC2InstanceRole
 
-  EnableAccessCloudWatchPolicy:
+  EC2EnableAccessCloudWatch:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: EC2AccessPolicies
+      PolicyName: EC2FullAccessCloudWatchPolicy
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -76,7 +76,7 @@ Resources:
     Properties:
       LaunchTemplate:
         LaunchTemplateId: !Ref EC2LaunchTemplate
-        Version: !GetAtt EC2LaunchTemplate.LatestNumber
+        Version: !GetAtt EC2LaunchTemplate.LatestVersionNumber
       Tags:
         - Key: Name
           Value: !Sub ${Env}-ec2
@@ -84,15 +84,13 @@ Resources:
   EC2LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
-      LaunchTemplateName: WebTemplate
+      LaunchTemplateName: EC2Template
       LaunchTemplateData:
-        ImageId: ami-03d79d440297083e3
-        InstanceType: t2.micro
+        ImageId: !Ref AMIID
+        InstanceType: !Ref InstanceType
         KeyName: !Ref KeyName
         SecurityGroupIds:
-        CpuOptions:
-          CoreCount: 1
-          ThreadsPerCore: 2
+          - !Ref WebSecurityGroup
         IamInstanceProfile:
           Arn: !GetAtt EC2InstanceProfile.Arn
           Name: EC2InstanceProfile
@@ -113,7 +111,7 @@ Resources:
               VolumeSize: 8
               VolumeType: gp2
         UserData:
-          sudo yum -y install git nginx php amazon-cloudwatch-agent
+          sudo yum -y install git nginx php amazon-cloudwatch-agent posgresql
         InstanceInitiatedShutdownBehavior: stop
       TagSpecifications:
         - ResourceType: instance
@@ -121,81 +119,82 @@ Resources:
             - Key: Name
               Value: !Sub ${Env}-web
 
-  MyAutoScalingGroup:
+  AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      AutoScalingGroupName: CHANGEME # Optional
+      AutoScalingGroupName: EC2AutoScalingGroup
       AvailabilityZones:
-        - CHANGEME
+        - !Select
+          - 0
+          - Fn::GetAZs: !Ref AWS::Region
+        - !Select
+          - 1
+          - Fn::GetAZs: !Ref AWS::Region
       CapacityRebalance: false # Optional
-      Cooldown: CHANGEME # Optional
-      DesiredCapacity: CHANGEME # Optional
-      HealthCheckGracePeriod: 0 # Optional
-      HealthCheckType: CHANGEME # Optional
-      InstanceId: CHANGEME # Optional
-      LaunchConfigurationName: CHANGEME # Optional
-      LaunchTemplate: # Optional
-        LaunchTemplateId: CHANGEME # Optional
-        LaunchTemplateName: CHANGEME # Optional
-        Version: CHANGEME
+      Cooldown: 300
+      DesiredCapacityType: units
+      DesiredCapacity: 1
+      MinSize: 1
+      MaxSize: 1
+      HealthCheckType: EC2
+      HealthCheckGracePeriod: 120
+      LaunchTemplate:
+        LaunchTemplateId: !Ref EC2LaunchTemplate
+        Version: !GetAtt EC2LaunchTemplate.LatestVersionNumber
       LifecycleHookSpecificationList:
-        - DefaultResult: CHANGEME # Optional
-          HeartbeatTimeout: 0 # Optional
-          LifecycleHookName: CHANGEME
-          LifecycleTransition: CHANGEME
-          NotificationMetadata: CHANGEME # Optional
-          NotificationTargetARN: CHANGEME # Optional
-          RoleARN: CHANGEME # Optional
-      LoadBalancerNames:
-        - CHANGEME
-      MaxInstanceLifetime: 0 # Optional
-      MaxSize: CHANGEME
+        - DefaultResult: ABANDON
+          HeartbeatTimeout: 120
+          LifecycleHookName: EC2LifecycleHook
+          LifecycleTransition: EC2_INSTANCE_LAUNCHING
+            # NotificationMetadata: CHANGEME # Optional
+            # NotificationTargetARN: CHANGEME # Optional
+            # RoleARN: CHANGEME # Optional
+      MaxInstanceLifetime: 0
       MetricsCollection:
-        - Granularity: CHANGEME
-          Metrics: # Optional
-            - CHANGEME
-      MinSize: CHANGEME
-      MixedInstancesPolicy: # Optional
-        InstancesDistribution: # Optional
-          OnDemandAllocationStrategy: CHANGEME # Optional
-          OnDemandBaseCapacity: 0 # Optional
-          OnDemandPercentageAboveBaseCapacity: 0 # Optional
-          SpotAllocationStrategy: CHANGEME # Optional
-          SpotInstancePools: 0 # Optional
-          SpotMaxPrice: CHANGEME # Optional
-        LaunchTemplate:
-          LaunchTemplateSpecification:
-            LaunchTemplateId: CHANGEME # Optional
-            LaunchTemplateName: CHANGEME # Optional
-            Version: CHANGEME
-          Overrides: # Optional
-            - InstanceType: CHANGEME # Optional
-              LaunchTemplateSpecification: # Optional
-                LaunchTemplateId: CHANGEME # Optional
-                LaunchTemplateName: CHANGEME # Optional
-                Version: CHANGEME
-              WeightedCapacity: CHANGEME # Optional
-      NewInstancesProtectedFromScaleIn: false # Optional
-      NotificationConfigurations:
-        - NotificationTypes: # Optional
-            - CHANGEME
-          TopicARN: CHANGEME
-      PlacementGroup: CHANGEME # Optional
-      ServiceLinkedRoleARN: CHANGEME # Optional
+        - Granularity: 1Minute
+          Metrics:
+            - GroupInServiceInstances
+            - GroupPendingInstances
+            - GroupStandbyInstances
+            - GroupTotalInstances
+              #MixedInstancesPolicy: # Optional
+              #  InstancesDistribution: # Optional
+              #    OnDemandAllocationStrategy: CHANGEME # Optional
+              #    OnDemandBaseCapacity: 0 # Optional
+              #    OnDemandPercentageAboveBaseCapacity: 0 # Optional
+              #    SpotAllocationStrategy: CHANGEME # Optional
+              #    SpotInstancePools: 0 # Optional
+              #    SpotMaxPrice: CHANGEME # Optional
+              #  LaunchTemplate:
+              #    LaunchTemplateSpecification:
+              #      LaunchTemplateId: CHANGEME # Optional
+              #      LaunchTemplateName: CHANGEME # Optional
+              #      Version: CHANGEME
+              #    Overrides: # Optional
+              #      - InstanceType: CHANGEME # Optional
+              #        LaunchTemplateSpecification: # Optional
+              #          LaunchTemplateId: CHANGEME # Optional
+              #          LaunchTemplateName: CHANGEME # Optional
+              #          Version: CHANGEME
+              #        WeightedCapacity: CHANGEME # Optional
+      NewInstancesProtectedFromScaleIn: false
+        # NotificationConfigurations:
+        #   - NotificationTypes:
+        #       - autoscaling:EC2_INSTANCE_LAUNCH
+        #       - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+        #       - autoscaling:EC2_INSTANCE_TERMINATE
+        #       - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+        #     TopicARN: CHANGEME
+        #PlacementGroup: CHANGEME # Optional
+        #ServiceLinkedRoleARN: CHANGEME # Optional
       Tags:
-        - Key: CHANGEME
-          PropagateAtLaunch: false
-          Value: CHANGEME
+        - Key: Name
+          Value: !Sub ${Env}-ec2
+          PropagateAtLaunch: true
       TargetGroupARNs:
         - CHANGEME
       TerminationPolicies:
         - CHANGEME
       VPCZoneIdentifier:
-        - CHANGEME
-
-Outputs:
-  EC2Instance:
-    Value: !Ref EC2Instance
-    Export:
-      Name: EC2Instance
-
+        - 
+  
