@@ -55,7 +55,7 @@ Resources:
         - Key: Name
           Value: !Sub ${Env}-pub-routetable-1a
 
-  PublicSubnetRouteTable1aAssociation:
+  PublicSubnet1aRouteTable1aAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PublicRouteTable1a
@@ -93,7 +93,7 @@ Resources:
         - Key: Name
           Value: !Sub ${Env}-pub-routetable-1c
 
-  PublicSubnetRouteTable1cAssociation:
+  PublicSubnet1cRouteTable1cAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PublicRouteTable1c
@@ -106,11 +106,11 @@ Resources:
       GatewayId: !Ref InternetGateway
       RouteTableId: !Ref PublicRouteTable1c
 
-  PrivateSubnet1a:
+  PublicSubnet1d:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Select
-        - 0
+        - 2
         - Fn::GetAZs: !Ref AWS::Region
       CidrBlock: !Select
         - 2
@@ -121,13 +121,34 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub ${Env}-prisub
+          Value: !Sub ${Env}-pubsub-1d
 
-  PrivateSubnet1c:
+  PublicRouteTable1d:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${Env}-pub-routetable-1d
+
+  PublicSubnet1dRouteTable1cAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable1d
+      SubnetId: !Ref PublicSubnet1d
+
+  PublicRoute1d:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref PublicRouteTable1d
+
+  PrivateSubnet1a:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Select
-        - 1
+        - 0
         - Fn::GetAZs: !Ref AWS::Region
       CidrBlock: !Select
         - 3
@@ -138,7 +159,41 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub ${Env}-prisub
+          Value: !Sub ${Env}-prisub-1a
+
+  PrivateSubnet1c:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select
+        - 1
+        - Fn::GetAZs: !Ref AWS::Region
+      CidrBlock: !Select
+        - 4
+        - Fn::Cidr:
+          - !GetAtt VPC.CidrBlock
+          - 5
+          - 8
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${Env}-prisub-1c
+
+  PrivateSubnet1d:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select
+        - 2
+        - Fn::GetAZs: !Ref AWS::Region
+      CidrBlock: !Select
+        - 5
+        - Fn::Cidr:
+          - !GetAtt VPC.CidrBlock
+          - 6
+          - 8
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${Env}-prisub-1d
 
   PrivateRouteTable1a:
     Type: AWS::EC2::RouteTable
@@ -146,7 +201,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub ${Env}-pri-routetable
+          Value: !Sub ${Env}-pri-routetable-1a
 
   PrivateRouteTable1c:
     Type: AWS::EC2::RouteTable
@@ -154,48 +209,66 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub ${Env}-pri-routetable
+          Value: !Sub ${Env}-pri-routetable-1c
 
-  PrivateSubnetRouteTable1aAssociation:
+  PrivateRouteTable1d:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${Env}-pri-routetable-1d
+
+  PrivateSubnet1aRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PrivateRouteTable1a
       SubnetId: !Ref PrivateSubnet1a
 
-  PrivateSubnetRouteTable1cAssociation:
+  PrivateSubnet1cRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PrivateRouteTable1c
       SubnetId: !Ref PrivateSubnet1c
 
-
-
-
-
+  PrivateSubnet1dRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1d
+      SubnetId: !Ref PrivateSubnet1d
 
 Outputs:
   VpcId:
     Value: !Ref VPC
     Export:
       Name: VpcId
+
   PublicSubnet1a:
     Value: !Ref PublicSubnet1a
     Export:
       Name: PublicSubnet1a
+
+  PublicSubnet1c:
+    Value: !Ref PublicSubnet1c
+    Export:
+      Name: PublicSubnet1c
+
+  PublicSubnet1d:
+    Value: !Ref PublicSubnet1d
+    Export:
+      Name: PublicSubnet1d
+
   PrivateSubnet1a:
     Value: !Ref PrivateSubnet1a
     Export:
       Name: PrivateSubnet1a
+
   PrivateSubnet1c:
     Value: !Ref PrivateSubnet1c
     Export:
       Name: PrivateSubnet1c
-  WebSecurityGroup:
-    Value: !Ref WebSecurityGroup
-    Export:
-      Name: WebSecurirtyGroup
-  DBSecurityGroup:
-    Value: !Ref DBSecurityGroup
-    Export:
-      Name: DBSecurityGroup
 
+  PrivateSubnet1d:
+    Value: !Ref PrivateSubnet1d
+    Export:
+      Name: PrivateSubnet1d
