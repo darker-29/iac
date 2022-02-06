@@ -26,7 +26,9 @@ Resources:
     Properties:
       GroupDescription: Web Security Group
       GroupName: !Sub ${Env}-web-secgroup
-      VpcId: !Ref VPC
+      VpcId:
+        Fn::ImportValue:
+          !Sub ${Env}-VpcId
       SecurityGroupIngress:
         - CidrIp: 0.0.0.0/0
           FromPort: 80
@@ -133,7 +135,9 @@ Resources:
           - AssociatePublicIpAddress: true
             DeleteOnTermination: true
             DeviceIndex: 0
-            SubnetId: !Ref PublicSubnet1a
+            SubnetId:
+              Fn::ImportValue:
+                !Sub ${Env}-PublicSubnet1a
             Groups:
               - !Ref WebSecurityGroup
         BlockDeviceMappings:
@@ -232,3 +236,8 @@ Resources:
       VPCZoneIdentifier:
         - 
 
+Outputs:
+  WebSecurityGroup:
+    Value: !Ref WebSecurityGroup
+    Ecport:
+      Name: !Sub ${Env}-WebSecurityGroup

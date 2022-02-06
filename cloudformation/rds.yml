@@ -13,9 +13,13 @@ Resources:
     Properties:
       GroupDescription: DB Security Group
       GroupName: !Sub ${Env}-db-secgroup
-      VpcId: !Ref VPC
+      VpcId:
+        Fn::ImportValue:
+          !Sub ${Env}-VpcId
       SecurityGroupIngress:
-        - SourceSecurityGroupId: !Ref WebSecurityGroup
+        - SourceSecurityGroupId:
+            Fn:importValue:
+              !Sub ${Env}-WebSecurityGroup
           FromPort: 5432
           IpProtocol: tcp
           ToPort: 5432
@@ -69,8 +73,10 @@ Resources:
       DBSubnetGroupName: !Sub ${Env}-dbsubnet
       DBSubnetGroupDescription: test subnet group
       SubnetIds:
-        - !Ref PrivateSubnet1a
-        - !Ref PrivateSubnet1c
+        - Fn::importValue
+          !Sub ${Env}-PrivateSubnet1a
+        - Fn::importValue
+          !Sub ${Env}-PrivateSubnet1c
 
   DBParameterGroup:
     Type: AWS::RDS::DBParameterGroup

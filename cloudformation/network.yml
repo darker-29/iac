@@ -329,34 +329,34 @@ Outputs:
   VpcId:
     Value: !Ref VPC
     Export:
-      Name: VpcId
+      Name: !Sub ${Env}-VpcId
 
   PublicSubnet1a:
     Value: !Ref PublicSubnet1a
     Export:
-      Name: PublicSubnet1a
+      Name: !Sub ${Env}-PublicSubnet1a
 
   PublicSubnet1c:
     Value: !Ref PublicSubnet1c
     Export:
-      Name: PublicSubnet1c
+      Name: !Sub ${Env}-PublicSubnet1c
 
   PublicSubnet1d:
     Value: !Ref PublicSubnet1d
     Export:
-      Name: PublicSubnet1d
+      Name: !Sub ${Env}-PublicSubnet1d
 
   PrivateSubnet1a:
     Value: !Ref PrivateSubnet1a
     Export:
-      Name: PrivateSubnet1a
+      Name: !Sub ${Env}-PrivateSubnet1a
 
   PrivateSubnet1c:
     Value: !Ref PrivateSubnet1c
     Export:
-      Name: PrivateSubnet1c
+      Name: !Sub ${Env}-PrivateSubnet1c
 
   PrivateSubnet1d:
     Value: !Ref PrivateSubnet1d
     Export:
-      Name: PrivateSubnet1d
+      Name: !Sub ${Env}-PrivateSubnet1d
