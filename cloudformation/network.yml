@@ -285,7 +285,7 @@ Resources:
       Domain: vpc
       Tags:
         - Key: Name
-          Value: !Ref ${Env}-eip-1a
+          Value: !Sub ${Env}-eip-1a
 
   NatRoute1a:
     Type: AWS::EC2::Route
@@ -308,14 +308,14 @@ Resources:
         - Key: Name
           Value: !Sub ${Env}-nat-1c
 
-  EIPAttachedToNatGateway1c:
+  EIP1c:
     Type: AWS::EC2::EIP
     Condition: NeedNat
     Properties:
       Domain: vpc
       Tags:
         - Key: Name
-          Value: !Ref ${Env}-eip-1c
+          Value: !Sub ${Env}-eip-1c
 
   NatRoute1c:
     Type: AWS::EC2::Route
@@ -341,10 +341,10 @@ Outputs:
     Export:
       Name: !Sub ${Env}-PublicSubnet1c
 
-  PublicSubnet1d:
-    Value: !Ref PublicSubnet1d
-    Export:
-      Name: !Sub ${Env}-PublicSubnet1d
+        #PublicSubnet1d:
+        #  Value: !Ref PublicSubnet1d
+        #  Export:
+        #    Name: !Sub ${Env}-PublicSubnet1d
 
   PrivateSubnet1a:
     Value: !Ref PrivateSubnet1a
@@ -356,7 +356,7 @@ Outputs:
     Export:
       Name: !Sub ${Env}-PrivateSubnet1c
 
-  PrivateSubnet1d:
-    Value: !Ref PrivateSubnet1d
-    Export:
-      Name: !Sub ${Env}-PrivateSubnet1d
+        #PrivateSubnet1d:
+        #  Value: !Ref PrivateSubnet1d
+        #  Export:
+        #    Name: !Sub ${Env}-PrivateSubnet1d
