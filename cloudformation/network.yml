@@ -5,8 +5,18 @@ Parameters:
   Env:
     Type: String
     Default: test
+  NeedNat:
+    Type: Number
+    AllowedValues: [0, 1]
+    Default: 0
+
+Conditions:
+  NeedNat: !Equals [!Ref NeedNat, 1]
 
 Resources:
+#############################################
+# VPC, InternetGateway
+#############################################
   VPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -30,6 +40,9 @@ Resources:
       InternetGatewayId: !Ref InternetGateway
       VpcId: !Ref VPC
 
+##############################################
+# PublicSubnet (AZ: ap-northeast-1a)
+##############################################
   PublicSubnet1a:
     Type: AWS::EC2::Subnet
     Properties:
@@ -68,6 +81,9 @@ Resources:
       GatewayId: !Ref InternetGateway
       RouteTableId: !Ref PublicRouteTable1a
 
+############################################
+# PublicSubnet (AZ: ap-northeast-1c)
+############################################
   PublicSubnet1c:
     Type: AWS::EC2::Subnet
     Properties:
@@ -106,44 +122,50 @@ Resources:
       GatewayId: !Ref InternetGateway
       RouteTableId: !Ref PublicRouteTable1c
 
-  PublicSubnet1d:
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone: !Select
-        - 2
-        - Fn::GetAZs: !Ref AWS::Region
-      CidrBlock: !Select
-        - 2
-        - Fn::Cidr:
-          - !GetAtt VPC.CidrBlock
-          - 3
-          - 8
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: !Sub ${Env}-pubsub-1d
+############################################
+# PublicSubnet (AZ: ap-northeast-1d)
+############################################
+#  PublicSubnet1d:
+#    Type: AWS::EC2::Subnet
+#    Properties:
+#      AvailabilityZone: !Select
+#        - 2
+#        - Fn::GetAZs: !Ref AWS::Region
+#      CidrBlock: !Select
+#        - 2
+#        - Fn::Cidr:
+#          - !GetAtt VPC.CidrBlock
+#          - 3
+#          - 8
+#      VpcId: !Ref VPC
+#      Tags:
+#        - Key: Name
+#          Value: !Sub ${Env}-pubsub-1d
+#
+#  PublicRouteTable1d:
+#    Type: AWS::EC2::RouteTable
+#    Properties:
+#      VpcId: !Ref VPC
+#      Tags:
+#        - Key: Name
+#          Value: !Sub ${Env}-pub-routetable-1d
+#
+#  PublicSubnet1dRouteTable1cAssociation:
+#    Type: AWS::EC2::SubnetRouteTableAssociation
+#    Properties:
+#      RouteTableId: !Ref PublicRouteTable1d
+#      SubnetId: !Ref PublicSubnet1d
+#
+#  PublicRoute1d:
+#    Type: AWS::EC2::Route
+#    Properties:
+#      DestinationCidrBlock: 0.0.0.0/0
+#      GatewayId: !Ref InternetGateway
+#      RouteTableId: !Ref PublicRouteTable1d
 
-  PublicRouteTable1d:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: !Sub ${Env}-pub-routetable-1d
-
-  PublicSubnet1dRouteTable1cAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PublicRouteTable1d
-      SubnetId: !Ref PublicSubnet1d
-
-  PublicRoute1d:
-    Type: AWS::EC2::Route
-    Properties:
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref InternetGateway
-      RouteTableId: !Ref PublicRouteTable1d
-
+############################################
+# PrivateSubnet (AZ: ap-northeast-1a)
+############################################
   PrivateSubnet1a:
     Type: AWS::EC2::Subnet
     Properties:
@@ -161,6 +183,23 @@ Resources:
         - Key: Name
           Value: !Sub ${Env}-prisub-1a
 
+  PrivateRouteTable1a:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${Env}-pri-routetable-1a
+
+  PrivateSubnet1aRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1a
+      SubnetId: !Ref PrivateSubnet1a
+
+############################################
+# PrivateSubnet (AZ: ap-northeast-1c)
+############################################
   PrivateSubnet1c:
     Type: AWS::EC2::Subnet
     Properties:
@@ -178,31 +217,6 @@ Resources:
         - Key: Name
           Value: !Sub ${Env}-prisub-1c
 
-  PrivateSubnet1d:
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone: !Select
-        - 2
-        - Fn::GetAZs: !Ref AWS::Region
-      CidrBlock: !Select
-        - 5
-        - Fn::Cidr:
-          - !GetAtt VPC.CidrBlock
-          - 6
-          - 8
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: !Sub ${Env}-prisub-1d
-
-  PrivateRouteTable1a:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: !Sub ${Env}-pri-routetable-1a
-
   PrivateRouteTable1c:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -211,31 +225,105 @@ Resources:
         - Key: Name
           Value: !Sub ${Env}-pri-routetable-1c
 
-  PrivateRouteTable1d:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: !Sub ${Env}-pri-routetable-1d
-
-  PrivateSubnet1aRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable1a
-      SubnetId: !Ref PrivateSubnet1a
-
   PrivateSubnet1cRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PrivateRouteTable1c
       SubnetId: !Ref PrivateSubnet1c
 
-  PrivateSubnet1dRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
+############################################
+# PrivateSubnet (AZ: ap-northeast-1d)
+############################################
+#  PrivateSubnet1d:
+#    Type: AWS::EC2::Subnet
+#    Properties:
+#      AvailabilityZone: !Select
+#        - 2
+#        - Fn::GetAZs: !Ref AWS::Region
+#      CidrBlock: !Select
+#        - 5
+#        - Fn::Cidr:
+#          - !GetAtt VPC.CidrBlock
+#          - 6
+#          - 8
+#      VpcId: !Ref VPC
+#      Tags:
+#        - Key: Name
+#          Value: !Sub ${Env}-prisub-1d
+#
+#  PrivateRouteTable1d:
+#    Type: AWS::EC2::RouteTable
+#    Properties:
+#      VpcId: !Ref VPC
+#      Tags:
+#        - Key: Name
+#          Value: !Sub ${Env}-pri-routetable-1d
+#
+#  PrivateSubnet1dRouteTableAssociation:
+#    Type: AWS::EC2::SubnetRouteTableAssociation
+#    Properties:
+#      RouteTableId: !Ref PrivateRouteTable1d
+#      SubnetId: !Ref PrivateSubnet1d
+
+############################################
+# NATGateway (AZ: ap-northeast-1a)
+############################################
+  NatGateway1a:
+    Type: AWS::EC2::NatGateway
+    Condition: NeedNat
     Properties:
-      RouteTableId: !Ref PrivateRouteTable1d
-      SubnetId: !Ref PrivateSubnet1d
+      AllocationId: !GetAtt EIP1a.AllocationId
+      SubnetId: !Ref PublicSubnet1a
+      Tags:
+        - Key: Name
+          Value: !Sub ${Env}-nat-1a
+
+  EIP1a:
+    Type: AWS::EC2::EIP
+    Condition: NeedNat
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Ref ${Env}-eip-1a
+
+  NatRoute1a:
+    Type: AWS::EC2::Route
+    Condition: NeedNat
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref NatGateway1a
+      RouteTableId: !Ref PrivateSubnet1a
+
+############################################
+# NATGateway (AZ: ap-northeast-1c)
+############################################
+  NatGateway1c:
+    Type: AWS::EC2::NatGateway
+    Condition: NeedNat
+    Properties:
+      AllocationId: !GetAtt EIP1a.AllocationId
+      SubnetId: !Ref PublicSubnet1c
+      Tags:
+        - Key: Name
+          Value: !Sub ${Env}-nat-1c
+
+  EIPAttachedToNatGateway1c:
+    Type: AWS::EC2::EIP
+    Condition: NeedNat
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Ref ${Env}-eip-1c
+
+  NatRoute1c:
+    Type: AWS::EC2::Route
+    Condition: NeedNat
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref NatGateway1c
+      RouteTableId: !Ref PrivateSubnet1c
 
 Outputs:
   VpcId:
@@ -272,3 +360,7 @@ Outputs:
     Value: !Ref PrivateSubnet1d
     Export:
       Name: PrivateSubnet1d
+
+  MyEIPAllocationId:
+    Value: !GetAtt MyEIP.AllocationId
+
