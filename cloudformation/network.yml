@@ -302,7 +302,7 @@ Resources:
     Type: AWS::EC2::NatGateway
     Condition: NeedNat
     Properties:
-      AllocationId: !GetAtt EIP1a.AllocationId
+      AllocationId: !GetAtt EIP1c.AllocationId
       SubnetId: !Ref PublicSubnet1c
       Tags:
         - Key: Name
