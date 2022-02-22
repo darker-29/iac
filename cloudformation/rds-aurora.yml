@@ -30,7 +30,7 @@ Resources:
       DBClusterIdentifier: !Sub ${Env}-db-cluster
       Engine: aurora-postgresql
       EngineMode: provisioned
-      EngineVersion: 13.4
+      EngineVersion: 13.3
       DBClusterParameterGroupName: !Ref DBClusterParameterGroup
       DBSubnetGroupName: !Ref DBSubnetGroup
       DatabaseName: test
@@ -47,8 +47,8 @@ Resources:
   DBInstance:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceClass: db.t3.micro
-      DBEngine: aurora-postgresql
+      DBInstanceClass: db.t3.medium
+      Engine: aurora-postgresql
       DBClusterIdentifier: !Ref DBCluster
       DBSubnetGroupName: !Ref DBSubnetGroup
       DBParameterGroupName: !Ref DBInstanceParameterGroup
@@ -71,7 +71,7 @@ Resources:
     Type: AWS::RDS::DBParameterGroup
     Properties:
       Description: test db parametergroup
-      Family: postgres13
+      Family: aurora-postgresql13
         #Parameters:
         #  CHANGEME:
       Tags:
