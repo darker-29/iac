@@ -86,7 +86,7 @@ Resources:
           Resource:
             - "arn:aws:s3:::*"
       Roles:
-      - !Ref EC2InstanceRole
+        - !Ref EC2InstanceRole
 
   EC2EnableAccessCloudWatch:
     Type: AWS::IAM::Policy
@@ -100,7 +100,7 @@ Resources:
           Resource:
             - "arn:aws:cloudwatch:::*"
       Roles:
-      - !Ref EC2InstanceRole
+        - !Ref EC2InstanceRole
 
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
