@@ -230,15 +230,15 @@ Resources:
           Value: !Sub ${Env}-ec2
           PropagateAtLaunch: true
       TargetGroupARNs:
-        - Fn::ImportValue
-          !Sub ${Env}-ALBTargetGroup
+        - Fn::ImportValue:
+            !Sub ${Env}-ALBTargetGroup
       TerminationPolicies:
         - OldestInstance
       VPCZoneIdentifier:
-        - Fn::ImportValue
-          !Sub ${Env}-PublicSubnet1a
-        - Fn::ImportValue
-          !Sub ${Env}-PublicSubnet1c
+        - Fn::ImportValue:
+            !Sub ${Env}-PublicSubnet1a
+        - Fn::ImportValue:
+            !Sub ${Env}-PublicSubnet1c
 
 Outputs:
   WebSecurityGroup:
