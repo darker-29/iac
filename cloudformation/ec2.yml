@@ -149,99 +149,20 @@ Resources:
               VolumeType: gp2
         UserData:
           Fn::Base64: |
+            #!/bin/bash
             sudo yum -y install git nginx php amazon-cloudwatch-agent posgresql
         InstanceInitiatedShutdownBehavior: stop
-          #TagSpecifications:
-          #  - ResourceType: instance
-          #    Tags:
-          #      - Key: Name
-          #        Value: !Sub ${Env}-web
-
-  AutoScalingGroup:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    Properties:
-      AutoScalingGroupName: EC2AutoScalingGroup
-      AvailabilityZones:
-        - !Select
-          - 0
-          - Fn::GetAZs: !Ref AWS::Region
-        - !Select
-          - 1
-          - Fn::GetAZs: !Ref AWS::Region
-      CapacityRebalance: false # Optional
-      Cooldown: 300
-      DesiredCapacityType: units
-      DesiredCapacity: 1
-      MinSize: 1
-      MaxSize: 1
-      HealthCheckType: EC2
-      HealthCheckGracePeriod: 120
-      LaunchTemplate:
-        LaunchTemplateId: !Ref EC2LaunchTemplate
-        Version: !GetAtt EC2LaunchTemplate.LatestVersionNumber
-      LifecycleHookSpecificationList:
-        - DefaultResult: ABANDON
-          HeartbeatTimeout: 120
-          LifecycleHookName: EC2LifecycleHook
-          LifecycleTransition: EC2_INSTANCE_LAUNCHING
-            # NotificationMetadata: CHANGEME # Optional
-            # NotificationTargetARN: CHANGEME # Optional
-            # RoleARN: CHANGEME # Optional
-      MaxInstanceLifetime: 0
-      MetricsCollection:
-        - Granularity: 1Minute
-          Metrics:
-            - GroupInServiceInstances
-            - GroupPendingInstances
-            - GroupStandbyInstances
-            - GroupTotalInstances
-              #MixedInstancesPolicy: # Optional
-              #  InstancesDistribution: # Optional
-              #    OnDemandAllocationStrategy: CHANGEME # Optional
-              #    OnDemandBaseCapacity: 0 # Optional
-              #    OnDemandPercentageAboveBaseCapacity: 0 # Optional
-              #    SpotAllocationStrategy: CHANGEME # Optional
-              #    SpotInstancePools: 0 # Optional
-              #    SpotMaxPrice: CHANGEME # Optional
-              #  LaunchTemplate:
-              #    LaunchTemplateSpecification:
-              #      LaunchTemplateId: CHANGEME # Optional
-              #      LaunchTemplateName: CHANGEME # Optional
-              #      Version: CHANGEME
-              #    Overrides: # Optional
-              #      - InstanceType: CHANGEME # Optional
-              #        LaunchTemplateSpecification: # Optional
-              #          LaunchTemplateId: CHANGEME # Optional
-              #          LaunchTemplateName: CHANGEME # Optional
-              #          Version: CHANGEME
-              #        WeightedCapacity: CHANGEME # Optional
-      NewInstancesProtectedFromScaleIn: false
-        # NotificationConfigurations:
-        #   - NotificationTypes:
-        #       - autoscaling:EC2_INSTANCE_LAUNCH
-        #       - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-        #       - autoscaling:EC2_INSTANCE_TERMINATE
-        #       - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
-        #     TopicARN: CHANGEME
-        #PlacementGroup: CHANGEME # Optional
-        #ServiceLinkedRoleARN: CHANGEME # Optional
-      Tags:
-        - Key: Name
-          Value: !Sub ${Env}-ec2
-          PropagateAtLaunch: true
-      TargetGroupARNs:
-        - Fn::ImportValue:
-            !Sub ${Env}-ALBTargetGroup
-      TerminationPolicies:
-        - OldestInstance
-      VPCZoneIdentifier:
-        - Fn::ImportValue:
-            !Sub ${Env}-PublicSubnet1a
-        - Fn::ImportValue:
-            !Sub ${Env}-PublicSubnet1c
 
 Outputs:
   WebSecurityGroup:
     Value: !Ref WebSecurityGroup
     Export:
       Name: !Sub ${Env}-WebSecurityGroup
+  EC2LaunchTemplate:
+    Value: !Ref EC2LaunchTemplate
+    Export:
+      Name: !Sub ${Env}-EC2LaunchTemplate
+  EC2LaunchTemplateLatestVersionNumber:
+    Value: !GetAtt EC2LaunchTemplate.LatestVersionNumber
+    Export:
+      Name: !Sub ${Env}-EC2LaunchTemplateLatestVersionNumber
